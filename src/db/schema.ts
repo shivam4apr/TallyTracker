@@ -9,7 +9,7 @@ import { appSchema, tableSchema } from '@nozbe/watermelondb';
 import { TABLE_NAMES } from '../utils/constants';
 
 export const schema = appSchema({
-  version: 4,
+  version: 5,
   tables: [
     // ─── CA Users ────────────────────────────────────────────────
     tableSchema({
@@ -87,6 +87,8 @@ export const schema = appSchema({
         { name: 'narration', type: 'string' },
         { name: 'ref_number', type: 'string' },
         { name: 'is_cancelled', type: 'boolean' },
+        { name: 'foreign_currency_code', type: 'string', isOptional: true },
+        { name: 'exchange_rate', type: 'number', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
       ],
@@ -109,6 +111,7 @@ export const schema = appSchema({
         { name: 'stock_item_id', type: 'string', isOptional: true },
         { name: 'stock_qty', type: 'number', isOptional: true },
         { name: 'discount_percent', type: 'number', isOptional: true },
+        { name: 'foreign_amount_paise', type: 'number', isOptional: true },
         { name: 'line_order', type: 'number' },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },

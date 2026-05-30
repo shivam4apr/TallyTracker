@@ -23,7 +23,10 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Switch,
 } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
+import * as LocalAuthentication from 'expo-local-authentication';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -64,10 +67,40 @@ export default function SettingsScreen() {
   const [syncStatusText, setSyncStatusText] = useState<string>('');
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
+  // Biometrics States
+  const [biometricsAvailable, setBiometricsAvailable] = useState<boolean>(false);
+  const [biometricsEnabled, setBiometricsEnabled] = useState<boolean>(false);
+
   useEffect(() => {
     getLastSyncedAt().then(setLastSyncedAt);
     getSyncEndpoint().then(setSyncEndpointText);
   }, [caUserId, showSyncModal]);
+
+  useEffect(() => {
+    async function checkBiometricsSupport() {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      const supportedTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
+      const hasBiometricSupport = supportedTypes && supportedTypes.length > 0;
+      
+      if (hasHardware && isEnrolled && hasBiometricSupport) {
+        setBiometricsAvailable(true);
+        const enabled = await SecureStore.getItemAsync('biometrics_enabled');
+        setBiometricsEnabled(enabled === 'true');
+      }
+    }
+    checkBiometricsSupport();
+  }, []);
+
+  const handleToggleBiometrics = async (value: boolean) => {
+    triggerHaptic();
+    try {
+      await SecureStore.setItemAsync('biometrics_enabled', String(value));
+      setBiometricsEnabled(value);
+    } catch (err) {
+      Alert.alert('Error', 'Failed to update biometric preference');
+    }
+  };
 
   const triggerHaptic = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -195,26 +228,7 @@ export default function SettingsScreen() {
     await safeStorage.setItem(LANGUAGE_KEY, lng);
   };
 
-  const handleResetApp = () => {
-    triggerHaptic();
-    Alert.alert(
-      'Reset TallyTracker',
-      'Are you sure you want to log out and clear all local database records? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset All',
-          style: 'destructive',
-          onPress: async () => {
-            await database.write(async () => {
-              await database.unsafeResetDatabase();
-            });
-            signOut();
-          },
-        },
-      ]
-    );
-  };
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -399,22 +413,28 @@ export default function SettingsScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* System Reset (Danger Zone) */}
-        <Text style={[styles.sectionTitle, { color: colors.danger || '#FF3B30', marginTop: 12 }]}>
-          {t('settings.danger')}
-        </Text>
-        <TouchableOpacity
-          style={[styles.actionRow, styles.dangerRow]}
-          onPress={handleResetApp}
-        >
-          <View style={styles.actionLeft}>
-            <Ionicons name="trash-outline" size={20} color={colors.danger || '#FF3B30'} />
-            <Text style={[styles.actionText, { color: colors.danger || '#FF3B30' }]}>
-              {t('settings.reset_data')}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color={colors.danger || '#FF3B30'} />
-        </TouchableOpacity>
+        {/* Biometric Security Switch */}
+        {biometricsAvailable && (
+          <>
+            <Text style={styles.sectionTitle}>Security</Text>
+            <View style={styles.card}>
+              <View style={styles.biometricRow}>
+                <View style={{ flex: 1, marginRight: 16 }}>
+                  <Text style={styles.biometricTitle}>Biometric Login</Text>
+                  <Text style={styles.biometricSubtitle}>
+                    Use Face ID / Fingerprint / Thumb verification to lock and unlock TallyTracker instantly.
+                  </Text>
+                </View>
+                <Switch
+                  value={biometricsEnabled}
+                  onValueChange={handleToggleBiometrics}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={Platform.OS === 'android' ? colors.background : undefined}
+                />
+              </View>
+            </View>
+          </>
+        )}
       </ScrollView>
 
       {/* Backup Modal */}
@@ -702,18 +722,34 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     shadowRadius: 6,
     elevation: 1,
   },
-  dangerRow: {
-    borderColor: (colors.danger || '#FF3B30') + '40',
+  biometricRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  biometricTitle: {
+    fontFamily: 'PlusJakartaSans_700Bold',
+    fontSize: 14.5,
+    color: colors.text,
+  },
+  biometricSubtitle: {
+    fontFamily: 'PlusJakartaSans_500Medium',
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 2,
   },
   actionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flex: 1,
+    marginRight: 16,
   },
   actionText: {
     fontFamily: 'PlusJakartaSans_700Bold',
     fontSize: 14.5,
     color: colors.text,
+    flex: 1,
   },
   modalBg: {
     flex: 1,

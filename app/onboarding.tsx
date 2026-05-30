@@ -20,6 +20,7 @@ import {
   Platform,
   ScrollView,
   Switch,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -52,8 +53,8 @@ export default function OnboardingScreen() {
   // Form State
   const [caName, setCaName] = useState('');
   const [email, setEmail] = useState('');
-  const [pin, setPin] = useState('');
-  const [confirmPin, setConfirmPin] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
   
   const [entityName, setEntityName] = useState('');
@@ -75,14 +76,24 @@ export default function OnboardingScreen() {
         setErrorMsg(t('onboarding.errors.name_required'));
         return;
       }
-      setStep(2);
-    } else if (step === 2) {
-      if (pin.length !== 4) {
-        setErrorMsg(t('onboarding.errors.pin_length'));
+      if (!email.trim()) {
+        setErrorMsg(t('onboarding.errors.email_required'));
         return;
       }
-      if (pin !== confirmPin) {
-        setErrorMsg(t('onboarding.errors.pin_mismatch'));
+      // Simple email validation regex
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        setErrorMsg('Please enter a valid email address');
+        return;
+      }
+      setStep(2);
+    } else if (step === 2) {
+      if (password.length < 6) {
+        setErrorMsg(t('onboarding.errors.password_length'));
+        return;
+      }
+      if (password !== confirmPassword) {
+        setErrorMsg(t('onboarding.errors.password_mismatch'));
         return;
       }
       
@@ -91,11 +102,11 @@ export default function OnboardingScreen() {
         const hasHardware = await LocalAuthentication.hasHardwareAsync();
         const isEnrolled = await LocalAuthentication.isEnrolledAsync();
         const supportedTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
-        const hasFingerprint = supportedTypes.includes(LocalAuthentication.AuthenticationType.FINGERPRINT);
+        const hasBiometricSupport = supportedTypes && supportedTypes.length > 0;
 
-        if (!hasHardware || !isEnrolled || !hasFingerprint) {
+        if (!hasHardware || !isEnrolled || !hasBiometricSupport) {
           setBiometricsEnabled(false);
-          setErrorMsg('Fingerprint / Thumb biometrics not available or not enrolled');
+          setErrorMsg('Biometric authentication (Face ID or fingerprint) not available or not enrolled');
           return;
         }
       }
@@ -118,24 +129,34 @@ export default function OnboardingScreen() {
       return;
     }
 
+    console.log('[Onboarding] handleFinish called. entityName:', entityName.trim());
+
     try {
-      // 1. Save access PIN in Secure Store
-      await SecureStore.setItemAsync('user_pin', pin);
+      // 1. Save access credentials in Secure Store
+      console.log('[Onboarding] Step 1: Saving credentials to SecureStore...');
+      await SecureStore.setItemAsync('user_email', email.trim().toLowerCase());
+      await SecureStore.setItemAsync('user_password', password);
+      console.log('[Onboarding] Step 1: Credentials saved.');
       
       // 2. Save biometric settings preference
+      console.log('[Onboarding] Step 2: Saving biometrics pref...');
       await SecureStore.setItemAsync('biometrics_enabled', String(biometricsEnabled));
+      console.log('[Onboarding] Step 2: Biometrics pref saved.');
 
       // 3. Write CA profile to WatermelonDB
+      console.log('[Onboarding] Step 3: Creating CA User in WatermelonDB...');
       const caUser = await database.write(async () => {
         return await database.get(TABLE_NAMES.CA_USERS).create((record: any) => {
           record.name = caName.trim();
-          record.email = email.trim();
-          record.pinHash = 'secured'; // Enforces secure authentication through SecureStore key check
+          record.email = email.trim().toLowerCase();
+          record.pinHash = 'secured';
           record.biometricEnabled = biometricsEnabled;
         });
       });
+      console.log('[Onboarding] Step 3: CA User created. ID:', caUser.id);
 
       // 4. Create first client entity in WatermelonDB
+      console.log('[Onboarding] Step 4: Creating Entity...');
       const entity = await database.write(async () => {
         return await database.get(TABLE_NAMES.ENTITIES).create((record: any) => {
           record.caUserId = caUser.id;
@@ -145,23 +166,37 @@ export default function OnboardingScreen() {
           record.address = address.trim();
           record.financialYearStart = fyStart;
           record.baseCurrency = 'INR';
+          record.closedFyYears = '[]';
           record.isArchived = false;
         });
       });
+      console.log('[Onboarding] Step 4: Entity created. ID:', entity.id);
 
       // 5. Seed default Tally ERP 9 groups and ledgers
+      console.log('[Onboarding] Step 5: Seeding account tree...');
       await seedAccountTree(database, entity.id);
+      console.log('[Onboarding] Step 5: Account tree seeded.');
 
       // 5.5 Seed default compliance habits
+      console.log('[Onboarding] Step 5.5: Seeding default habits...');
       await seedDefaultHabits(database, caUser.id);
+      console.log('[Onboarding] Step 5.5: Habits seeded.');
 
       // 6. Update local stores and log in
+      console.log('[Onboarding] Step 6: Signing in...');
       setActiveEntity(entity.id);
       signIn(caUser.id);
+      console.log('[Onboarding] Step 6: DONE. Signup complete!');
       
       // router.replace gets called by the NavigationGuard automatically!
     } catch (e: any) {
-      setErrorMsg(e.message || 'Database creation failed');
+      console.error('[Onboarding] Signup FAILED at some step:', e);
+      console.error('[Onboarding] Error name:', e?.name);
+      console.error('[Onboarding] Error message:', e?.message);
+      console.error('[Onboarding] Error stack:', e?.stack);
+      const errMsg = e.message || 'Database creation failed';
+      setErrorMsg(errMsg);
+      Alert.alert('Signup Failed', errMsg);
     }
   };
 
@@ -225,28 +260,26 @@ export default function OnboardingScreen() {
             {/* STEP 2: SECURITY */}
             {step === 2 && (
               <View>
-                <Text style={styles.label}>{t('onboarding.enter_pin')} *</Text>
+                <Text style={styles.label}>{t('onboarding.enter_password')} *</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="••••"
+                  placeholder="••••••••"
                   placeholderTextColor={colors.textMuted}
-                  keyboardType="number-pad"
                   secureTextEntry
-                  value={pin}
-                  onChangeText={(val) => setPin(val.replace(/[^0-9]/g, ''))}
-                  maxLength={4}
+                  value={password}
+                  onChangeText={setPassword}
+                  maxLength={50}
                 />
 
-                <Text style={styles.label}>{t('onboarding.confirm_pin')} *</Text>
+                <Text style={styles.label}>{t('onboarding.confirm_password')} *</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="••••"
+                  placeholder="••••••••"
                   placeholderTextColor={colors.textMuted}
-                  keyboardType="number-pad"
                   secureTextEntry
-                  value={confirmPin}
-                  onChangeText={(val) => setConfirmPin(val.replace(/[^0-9]/g, ''))}
-                  maxLength={4}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  maxLength={50}
                 />
 
                 <View style={styles.switchRow}>

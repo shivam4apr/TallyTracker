@@ -25,8 +25,12 @@ export function createAdapter() {
     console.log('WatermelonDB SQLiteAdapter failed to instantiate. Falling back to LokiJSAdapter.');
     return new LokiJSAdapter({
       schema,
+      migrations,
       useIncrementalIndexedDB: true,
       useWebWorker: false,
+      onSetUpError: (error) => {
+        console.error('WatermelonDB LokiJS setup error:', error);
+      },
     });
   }
 }

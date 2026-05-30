@@ -33,6 +33,7 @@ export default class VoucherLine extends Model {
   @field('stock_item_id') stockItemId?: string;
   @field('stock_qty') stockQty?: number;
   @field('discount_percent') discountPercent?: number;
+  @field('foreign_amount_paise') foreignAmountPaise!: number | null;
   @field('line_order') lineOrder!: number;
   @readonly @date('created_at') createdAt!: Date;
   @readonly @date('updated_at') updatedAt!: Date;

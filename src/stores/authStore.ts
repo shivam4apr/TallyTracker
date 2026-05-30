@@ -143,9 +143,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({
           status: 'authenticated',
           caUserId: savedUserId,
-          isLocked: savedLock === 'true',
+          isLocked: true, // Enforce lock on startup/launch
           isPremium: savedPremium === 'true',
         });
+        await safeStorage.setItem(STORAGE_KEY_LOCK, 'true').catch(() => {});
       } else {
         set({ status: 'unauthenticated' });
       }

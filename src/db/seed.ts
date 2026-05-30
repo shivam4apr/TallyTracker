@@ -265,23 +265,10 @@ const SEED_GROUPS: GroupDef[] = [
     ],
   },
   {
-    name: 'Direct Income',
-    nature: 'income',
-    displayOrder: 27,
-    ledgers: [],
-  },
-  {
-    name: 'Income (Direct)',
-    nature: 'income',
-    parentName: 'Direct Incomes',
-    displayOrder: 28,
-    ledgers: [],
-  },
-  {
     name: 'Income From Dues',
     nature: 'income',
     parentName: 'Direct Incomes',
-    displayOrder: 29,
+    displayOrder: 27,
     ledgers: [],
   },
 
@@ -289,7 +276,7 @@ const SEED_GROUPS: GroupDef[] = [
   {
     name: 'Indirect Incomes',
     nature: 'income',
-    displayOrder: 30,
+    displayOrder: 28,
     ledgers: [
       { name: 'Interest Received' },
       { name: 'Rent Received', gstRate: 18 },
@@ -298,25 +285,12 @@ const SEED_GROUPS: GroupDef[] = [
       { name: 'Miscellaneous Income' },
     ],
   },
-  {
-    name: 'Indirect Income',
-    nature: 'income',
-    displayOrder: 31,
-    ledgers: [],
-  },
-  {
-    name: 'Income (Indirect)',
-    nature: 'income',
-    parentName: 'Indirect Incomes',
-    displayOrder: 32,
-    ledgers: [],
-  },
 
   // --- 14. Direct Expenses and subgroups ---
   {
     name: 'Direct Expenses',
     nature: 'expense',
-    displayOrder: 33,
+    displayOrder: 29,
     ledgers: [
       { name: 'Raw Material Consumed', gstRate: 18 },
       { name: 'Direct Wages' },
@@ -324,25 +298,12 @@ const SEED_GROUPS: GroupDef[] = [
       { name: 'Packing Material', gstRate: 18 },
     ],
   },
-  {
-    name: 'Direct Expense',
-    nature: 'expense',
-    displayOrder: 34,
-    ledgers: [],
-  },
-  {
-    name: 'Expenses (Direct)',
-    nature: 'expense',
-    parentName: 'Direct Expenses',
-    displayOrder: 35,
-    ledgers: [],
-  },
 
   // --- 15. Indirect Expenses and subgroups ---
   {
     name: 'Indirect Expenses',
     nature: 'expense',
-    displayOrder: 36,
+    displayOrder: 30,
     ledgers: [
       { name: 'Salary' },
       { name: 'Rent Paid', gstRate: 18 },
@@ -354,19 +315,6 @@ const SEED_GROUPS: GroupDef[] = [
       { name: 'Miscellaneous Expenses' },
       { name: 'Round Off A/c' },
     ],
-  },
-  {
-    name: 'Indirect Expense',
-    nature: 'expense',
-    displayOrder: 37,
-    ledgers: [],
-  },
-  {
-    name: 'Expenses (Indirect)',
-    nature: 'expense',
-    parentName: 'Indirect Expenses',
-    displayOrder: 38,
-    ledgers: [],
   },
 ];
 
@@ -409,7 +357,7 @@ export async function seedAccountTree(database: Database, entityId: string): Pro
       for (const ledgerDef of groupDef.ledgers) {
         const ledger = ledgersCollection.prepareCreate((record: any) => {
           record.entityId = entityId;
-          record._raw.group_id = group.id; // Use the group's generated ID
+          record.groupId = group.id; // Use the group's generated ID
           record.name = ledgerDef.name;
           record.gstRate = ledgerDef.gstRate ?? 0;
           record.hsnSac = '';
@@ -479,7 +427,9 @@ const reconciliationPromises = new Map<string, Promise<void>>();
 export async function reconcileEntityGroups(database: Database, entityId: string): Promise<void> {
   let promise = reconciliationPromises.get(entityId);
   if (!promise) {
-    promise = performReconciliation(database, entityId);
+    promise = performReconciliation(database, entityId).finally(() => {
+      reconciliationPromises.delete(entityId);
+    });
     reconciliationPromises.set(entityId, promise);
   }
   return promise;
@@ -543,6 +493,82 @@ async function performReconciliation(database: Database, entityId: string): Prom
     });
     
     // Refresh group lists after deletion
+    existingGroups = await groupsCollection.query().fetch();
+    entityGroups = existingGroups.filter((g: any) => g.entityId === entityId) as any[];
+  }
+
+  // A2. Self-healing singular to plural synonym cleanup:
+  // e.g. Point any ledger belonging to 'Direct Income' to 'Direct Incomes', then delete 'Direct Income'.
+  const singularToPluralNames = new Map<string, string>([
+    ['Direct Income', 'Direct Incomes'],
+    ['Indirect Income', 'Indirect Incomes'],
+    ['Direct Expense', 'Direct Expenses'],
+    ['Indirect Expense', 'Indirect Expenses'],
+    ['Income (Direct)', 'Direct Incomes'],
+    ['Income (Indirect)', 'Indirect Incomes'],
+    ['Expenses (Direct)', 'Direct Expenses'],
+    ['Expenses (Indirect)', 'Indirect Expenses'],
+  ]);
+
+  const synonymGroupIdsToDelete = new Set<string>();
+  const synonymToPluralMap = new Map<string, string>();
+
+  // Find existing kept plural groups first
+  const pluralGroupMap = new Map<string, any>();
+  for (const group of entityGroups) {
+    if (Array.from(singularToPluralNames.values()).includes(group.name)) {
+      pluralGroupMap.set(group.name, group);
+    }
+  }
+
+  for (const group of entityGroups) {
+    const pluralName = singularToPluralNames.get(group.name);
+    if (pluralName) {
+      // Find the kept plural equivalent group
+      const keptPluralGroup = pluralGroupMap.get(pluralName);
+      if (keptPluralGroup) {
+        synonymGroupIdsToDelete.add(group.id);
+        synonymToPluralMap.set(group.id, keptPluralGroup.id);
+      }
+    }
+  }
+
+  if (synonymGroupIdsToDelete.size > 0) {
+    const ledgersCollection = database.get(TABLE_NAMES.LEDGERS);
+    const allLedgers = await ledgersCollection.query().fetch();
+    const entityLedgers = allLedgers.filter((l: any) => l.entityId === entityId) as any[];
+    
+    // Find ledgers pointing to singular synonym groups that will be deleted
+    const ledgersToUpdate = entityLedgers.filter((l: any) => synonymGroupIdsToDelete.has(l.groupId));
+    
+    await database.write(async () => {
+      const cleanupOps: any[] = [];
+      
+      // Update ledgers to point to the kept plural group ID
+      for (const ledger of ledgersToUpdate) {
+        const keptGroupId = synonymToPluralMap.get(ledger.groupId);
+        if (keptGroupId) {
+          const preparedUpdate = ledger.prepareUpdate((record: any) => {
+            record.groupId = keptGroupId;
+          });
+          cleanupOps.push(preparedUpdate);
+        }
+      }
+      
+      // Delete the singular synonym groups
+      for (const groupId of synonymGroupIdsToDelete) {
+        const groupToDelete = entityGroups.find((g: any) => g.id === groupId);
+        if (groupToDelete) {
+          cleanupOps.push(groupToDelete.prepareDestroyPermanently());
+        }
+      }
+      
+      if (cleanupOps.length > 0) {
+        await database.batch(...cleanupOps);
+      }
+    });
+    
+    // Refresh group list after cleanup
     existingGroups = await groupsCollection.query().fetch();
     entityGroups = existingGroups.filter((g: any) => g.entityId === entityId) as any[];
   }

@@ -27,6 +27,8 @@ export default class Voucher extends Model {
   @field('narration') narration!: string;
   @field('ref_number') refNumber!: string;
   @field('is_cancelled') isCancelled!: boolean;
+  @field('foreign_currency_code') foreignCurrencyCode!: string | null;
+  @field('exchange_rate') exchangeRate!: number | null;
   @readonly @date('created_at') createdAt!: Date;
   @readonly @date('updated_at') updatedAt!: Date;
 

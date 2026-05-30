@@ -213,6 +213,7 @@ export default function EntitiesScreen() {
           record.address = address.trim();
           record.financialYearStart = fyStart;
           record.baseCurrency = 'INR';
+          record.closedFyYears = '[]';
           record.isArchived = false;
         });
       });

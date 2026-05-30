@@ -1147,6 +1147,20 @@ export default function BankReconciliationScreen() {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
+
+      {/* 5. Ledger Picker Modal */}
+      <LedgerPicker
+        visible={showLedgerPicker}
+        entityId={activeEntityId || ''}
+        restrictToCashBank={true}
+        onClose={() => {
+          setShowLedgerPicker(false);
+        }}
+        onSelect={(ledger) => {
+          setSelectedLedger(ledger);
+          setShowLedgerPicker(false);
+        }}
+      />
     </SafeAreaView>
   );
 }

@@ -85,5 +85,23 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 5,
+      steps: [
+        addColumns({
+          table: 'vouchers',
+          columns: [
+            { name: 'foreign_currency_code', type: 'string', isOptional: true },
+            { name: 'exchange_rate', type: 'number', isOptional: true },
+          ],
+        }),
+        addColumns({
+          table: 'voucher_lines',
+          columns: [
+            { name: 'foreign_amount_paise', type: 'number', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

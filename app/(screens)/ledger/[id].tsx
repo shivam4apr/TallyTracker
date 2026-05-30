@@ -25,7 +25,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import database, { Entity, Voucher, VoucherLine, Ledger, AccountGroup } from '@/db';
-import { TABLE_NAMES, VOUCHER_TYPE_LABELS, VoucherType, AccountNature } from '@/utils/constants';
+import { TABLE_NAMES, VOUCHER_TYPE_LABELS, VoucherType } from '@/utils/constants';
 import { Q } from '@nozbe/watermelondb';
 import { useTheme } from '@/theme/ThemeProvider';
 import { ThemeColors } from '@/theme/themes';
@@ -131,7 +131,6 @@ export default function LedgerStatementScreen() {
         // Apply change to balance:
         // Dr increases assets/expenses, decreases liabilities/incomes/equity
         // Cr decreases assets/expenses, increases liabilities/incomes/equity
-        const isAssetOrExpense = gp.nature === 'asset' || gp.nature === 'expense';
         
         // Convert current balance to signed integer (Dr positive, Cr negative)
         let signedBalance = currentDrCr === 'Dr' ? currentBal : -currentBal;
@@ -246,7 +245,6 @@ export default function LedgerStatementScreen() {
   }
 
   // Final Closing balance calculation for footer
-  const isAssetExpense = group.nature === 'asset' || group.nature === 'expense';
   let netOp = ledger.openingBalanceDrCr === 'Dr' ? ledger.openingBalancePaise : -ledger.openingBalancePaise;
   let finalNet = netOp + totalDr - totalCr;
   const closingBalance = Math.abs(finalNet);

@@ -7,10 +7,12 @@
 
 import LokiJSAdapter from '@nozbe/watermelondb/adapters/lokijs';
 import { schema } from './schema';
+import { migrations } from './migrations';
 
 export function createAdapter() {
   return new LokiJSAdapter({
     schema,
+    migrations,
     useIncrementalIndexedDB: true,
     useWebWorker: false,
     onSetUpError: (error) => {
@@ -18,3 +20,4 @@ export function createAdapter() {
     },
   });
 }
+
