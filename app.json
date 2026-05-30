@@ -6,8 +6,10 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "tallytracker",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tallytracker.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -16,10 +18,46 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.tallytracker.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "@lovesworking/watermelondb-expo-plugin-sdk-52-plus"
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "extraPods": [
+              {
+                "name": "simdjson",
+                "configurations": [
+                  "Debug",
+                  "Release"
+                ],
+                "path": "../node_modules/@nozbe/simdjson",
+                "modular_headers": true
+              }
+            ]
+          },
+          "android": {
+            "packagingOptions": {
+              "pickFirst": [
+                "**/libc++_shared.so"
+              ]
+            }
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9fee75da-3fb7-4d91-a758-0724669a9581"
+      }
     }
   }
 }

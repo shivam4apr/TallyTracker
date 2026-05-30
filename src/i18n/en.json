@@ -1,0 +1,79 @@
+{
+  "onboarding": {
+    "title": "Welcome to TallyTracker",
+    "subtitle": "The ultimate mobile companion for Chartered Accountants",
+    "step_profile": "CA Profile",
+    "step_security": "PIN Setup",
+    "step_entity": "First Client",
+    "ca_name": "CA Name",
+    "ca_name_placeholder": "e.g., CA Rajesh Sharma",
+    "email": "Email Address (Optional)",
+    "email_placeholder": "e.g., rajesh@firm.com",
+    "enter_pin": "Enter 4-Digit Access PIN",
+    "confirm_pin": "Confirm PIN",
+    "enable_biometrics": "Enable Biometric Unlock",
+    "entity_name": "Client Business Name",
+    "entity_name_placeholder": "e.g., Krishna Traders",
+    "gstin": "GSTIN (Optional)",
+    "gstin_placeholder": "e.g., 27AAAAA1111A1Z1",
+    "pan": "PAN (Optional)",
+    "pan_placeholder": "e.g., ABCDE1234F",
+    "address": "Business Address (Optional)",
+    "address_placeholder": "e.g., Suite 101, Main Road, Mumbai",
+    "fy_start": "Financial Year Start",
+    "fy_start_april": "April 1st (Recommended)",
+    "fy_start_jan": "January 1st",
+    "button_next": "Next",
+    "button_back": "Back",
+    "button_finish": "Get Started",
+    "errors": {
+      "name_required": "Please enter your name",
+      "pin_length": "PIN must be exactly 4 digits",
+      "pin_mismatch": "PINs do not match",
+      "entity_required": "Please enter client business name"
+    }
+  },
+  "login": {
+    "title": "Enter Access PIN",
+    "subtitle": "Security lock active",
+    "welcome_title": "Welcome to TallyTracker",
+    "welcome_subtitle": "Sign in to your account to continue",
+    "no_account": "Don't have an account?",
+    "sign_up": "Sign Up",
+    "biometric_prompt": "Authenticate to unlock TallyTracker",
+    "biometric_error": "Biometric authentication failed",
+    "error_invalid_pin": "Incorrect PIN. Please try again.",
+    "error_lockout": "Too many failed attempts. Device locked.",
+    "forgot_pin": "Forgot PIN?"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "active_client": "Active Client",
+    "recent_vouchers": "Recent Vouchers",
+    "view_all": "View All",
+    "no_vouchers": "No vouchers created yet",
+    "vouchers_dr_cr": "Dr/Cr Enforced",
+    "habits": "Habits & Compliance",
+    "habits_completed": "Completed today",
+    "compliance_rate": "Compliance Rate"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Accent Theme",
+    "appearance": "Appearance Mode",
+    "data": "Data Management",
+    "cloud": "Cloud Synchronization",
+    "danger": "Danger Zone",
+    "backup_restore": "Backup & Restore Data",
+    "cloud_sync": "Cloud Sync Gateway",
+    "reset_data": "Reset Application Data"
+  },
+  "tabs": {
+    "dashboard": "Dashboard",
+    "vouchers": "Vouchers",
+    "reports": "Reports",
+    "more": "More",
+    "settings": "Settings"
+  }
+}

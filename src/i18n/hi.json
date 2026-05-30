@@ -1,0 +1,79 @@
+{
+  "onboarding": {
+    "title": "TallyTracker में आपका स्वागत है",
+    "subtitle": "चार्टर्ड अकाउंटेंट्स के लिए सर्वोत्तम मोबाइल साथी",
+    "step_profile": "सीए प्रोफ़ाइल",
+    "step_security": "पिन सेटअप",
+    "step_entity": "पहला क्लाइंट",
+    "ca_name": "सीए का नाम",
+    "ca_name_placeholder": "जैसे, CA राजेश शर्मा",
+    "email": "ईमेल पता (वैकल्पिक)",
+    "email_placeholder": "जैसे, rajesh@firm.com",
+    "enter_pin": "4-अंकीय एक्सेस पिन दर्ज करें",
+    "confirm_pin": "पिन की पुष्टि करें",
+    "enable_biometrics": "बायोमेट्रिक अनलॉक सक्षम करें",
+    "entity_name": "क्लाइंट व्यवसाय का नाम",
+    "entity_name_placeholder": "जैसे, कृष्णा ट्रेडर्स",
+    "gstin": "जीएसटीआईएन (वैकल्पिक)",
+    "gstin_placeholder": "जैसे, 27AAAAA1111A1Z1",
+    "pan": "पैन (वैकल्पिक)",
+    "pan_placeholder": "जैसे, ABCDE1234F",
+    "address": "व्यवसाय का पता (वैकल्पिक)",
+    "address_placeholder": "जैसे, सुइट 101, मुख्य सड़क, मुंबई",
+    "fy_start": "वित्तीय वर्ष का प्रारंभ",
+    "fy_start_april": "1 अप्रैल (अनुशंसित)",
+    "fy_start_jan": "1 जनवरी",
+    "button_next": "आगे बढ़ें",
+    "button_back": "पीछे जाएं",
+    "button_finish": "शुरू करें",
+    "errors": {
+      "name_required": "कृपया अपना नाम दर्ज करें",
+      "pin_length": "पिन ठीक 4 अंकों का होना चाहिए",
+      "pin_mismatch": "पिन मेल नहीं खाते",
+      "entity_required": "कृपया क्लाइंट व्यवसाय का नाम दर्ज करें"
+    }
+  },
+  "login": {
+    "title": "एक्सेस पिन दर्ज करें",
+    "subtitle": "सुरक्षा लॉक सक्रिय",
+    "welcome_title": "TallyTracker में आपका स्वागत है",
+    "welcome_subtitle": "जारी रखने के लिए अपने खाते में साइन इन करें",
+    "no_account": "कोई खाता नहीं है?",
+    "sign_up": "पंजीकरण करें",
+    "biometric_prompt": "TallyTracker अनलॉक करने के लिए प्रमाणित करें",
+    "biometric_error": "बायोमेट्रिक प्रमाणीकरण विफल रहा",
+    "error_invalid_pin": "गलत पिन। कृपया पुनः प्रयास करें।",
+    "error_lockout": "बहुत अधिक असफल प्रयास। डिवाइस लॉक हो गया।",
+    "forgot_pin": "पिन भूल गए?"
+  },
+  "dashboard": {
+    "title": "डैशबोर्ड",
+    "active_client": "सक्रिय क्लाइंट",
+    "recent_vouchers": "हाल के वाउचर",
+    "view_all": "सभी देखें",
+    "no_vouchers": "अभी तक कोई वाउचर नहीं बनाया गया है",
+    "vouchers_dr_cr": "डेबिट/क्रेडिट लागू",
+    "habits": "अनुपालन आदतें",
+    "habits_completed": "आज पूरा किया",
+    "compliance_rate": "अनुपालन दर"
+  },
+  "settings": {
+    "title": "सेटिंग्स",
+    "language": "भाषा",
+    "theme": "एक्सेंट थीम",
+    "appearance": "दिखावट मोड",
+    "data": "डेटा प्रबंधन",
+    "cloud": "क्लाउड सिंक्रोनाइजेशन",
+    "danger": "खतरे का क्षेत्र",
+    "backup_restore": "डेटा बैकअप और पुनर्प्राप्ति",
+    "cloud_sync": "क्लाउड सिंक गेटवे",
+    "reset_data": "एप्लिकेशन डेटा रीसेट करें"
+  },
+  "tabs": {
+    "dashboard": "डैशबोर्ड",
+    "vouchers": "वाउचर",
+    "reports": "रिपोर्ट",
+    "more": "अधिक",
+    "settings": "सेटिंग्स"
+  }
+}

@@ -23,7 +23,11 @@ export type VoucherType =
   | 'contra'
   | 'journal'
   | 'sales'
-  | 'purchase';
+  | 'purchase'
+  | 'debit_note'
+  | 'credit_note'
+  | 'sales_order'
+  | 'purchase_order';
 
 export const VOUCHER_TYPES: readonly VoucherType[] = [
   'payment',
@@ -32,6 +36,10 @@ export const VOUCHER_TYPES: readonly VoucherType[] = [
   'journal',
   'sales',
   'purchase',
+  'debit_note',
+  'credit_note',
+  'sales_order',
+  'purchase_order',
 ] as const;
 
 /** Short prefix used in voucher numbering (e.g. PMT/001/2425) */
@@ -42,6 +50,10 @@ export const VOUCHER_TYPE_PREFIX: Record<VoucherType, string> = {
   journal: 'JRN',
   sales: 'SLS',
   purchase: 'PUR',
+  debit_note: 'DBN',
+  credit_note: 'CRN',
+  sales_order: 'SO',
+  purchase_order: 'PO',
 };
 
 export const VOUCHER_TYPE_LABELS: Record<VoucherType, string> = {
@@ -51,6 +63,10 @@ export const VOUCHER_TYPE_LABELS: Record<VoucherType, string> = {
   journal: 'Journal',
   sales: 'Sales',
   purchase: 'Purchase',
+  debit_note: 'Debit Note',
+  credit_note: 'Credit Note',
+  sales_order: 'Sales Order',
+  purchase_order: 'Purchase Order',
 };
 
 // ─── Debit / Credit ────────────────────────────────────────────
@@ -120,4 +136,7 @@ export const TABLE_NAMES = {
   VOUCHER_LINES: 'voucher_lines',
   GST_COMPONENTS: 'gst_components',
   HABITS: 'habits',
+  PARTIES: 'parties',
+  AUDIT_LOGS: 'audit_logs',
+  STOCK_ITEMS: 'stock_items',
 } as const;
